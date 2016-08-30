@@ -10,20 +10,25 @@ import com.twilio.sdk.verbs.Message;
 
 public class TwilioServlet extends HttpServlet {
 
-	// service() responds to both GET and POST requests.
-	// You can also use doGet() or doPost()
 	public void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		// Requests come in the form: Request: 320, 341, etc.
 		String bodyOfRequest = request.getParameter("Body");
+		String busesRequestedSplitByCommas = bodyOfRequest.split("Request:")[1];
+		String[] busesRequested = busesRequestedSplitByCommas.split(",");
 		//String myResponse = "Hello, " + request.getParameter("From");
-		TwiMLResponse twiml = new TwiMLResponse();
-		Message message = new Message(bodyOfRequest);
-		try {
-			twiml.append(message);
-		} catch (TwiMLException e) {
-			e.printStackTrace();
+		// TODO: Work without the assumption that there will always be at least
+		// one bus requested.
+		for (int i = 0; i < busesRequested.length; i++) {
+			String stuffToReturn = busesRequested[i];
+			TwiMLResponse twiml = new TwiMLResponse();
+			Message message = new Message(stuffToReturn);
+			try {
+				twiml.append(message);
+			} catch (TwiMLException e) {
+				e.printStackTrace();
+			}
+			response.setContentType("application/xml");
+			response.getWriter().print(twiml.toXML());
 		}
-
-		response.setContentType("application/xml");
-		response.getWriter().print(twiml.toXML());
 	}
 }
