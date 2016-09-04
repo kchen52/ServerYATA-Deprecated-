@@ -25,6 +25,8 @@ public class TwilioServlet extends HttpServlet {
 	public String ACCOUNT_SID = "NULL";
 	public String AUTH_TOKEN = "NULL";
 	public String TWILIO_NUMBER = "NULL";
+
+	public final String myNumber = "16044403468";
 	// TODO: Read from a specific folder
 	public static final String CREDENTIALS_FILENAME = "/home/ubuntu/credentials";
 
@@ -34,19 +36,25 @@ public class TwilioServlet extends HttpServlet {
 		// Read in credentials from credentials file
 		initializeCredentials(CREDENTIALS_FILENAME);
 
-		sendSMS("16044403468", "Test message");
-
-		/*// Requests come in the form: Request: 320, 341, etc.
+		// Requests come in the form: Request: 320, 341, etc.
 		// TODO: Sometimes texts may come in blank, might want to take care of that.
 		String bodyOfRequest = request.getParameter("Body");
-		String busesRequestedSplitByCommas = bodyOfRequest.split("Request:")[1];
+		String busesRequestedSplitByCommas = bodyOfRequest.split("Request: ")[1];
 		String[] busesRequested = busesRequestedSplitByCommas.split(",");
 		// TODO: Work without the assumption that there will always be at least
 		// one bus requested.
 		if (busesRequested.length == 0) {
-		// Don't return anything
+			// Debug message for now
+			sendSMS(myNumber, "Requests should be in the form \"Request: 341,...\"");
+		}
+
+		for (int i = 0; i < busesRequested.length; i++) {
+			String stuffToReturn = busesRequested[i];
+			sendSMS(myNumber, "this is a long ass string, and i'm hoping to see what will happen if i try to send this all at once. at this point only god knows, but only one way to find out amirite lolol asdfjkasdfjaksdfjkasdlfkasjkdfajksdfjkasdf hasdofuiqweruio afsjkdofjaiosdjfiaosdf keep on trying to break some limit hollllllllyyyyyy shitttttttttajsdfjasdif");
+		}
+
 		// This following line is purely for debug purposes
-		TwiMLResponse twiml = new TwiMLResponse();
+		/*TwiMLResponse twiml = new TwiMLResponse();
 		Message message = new Message ("Returning nothing");
 		try {
 		twiml.append(message);
