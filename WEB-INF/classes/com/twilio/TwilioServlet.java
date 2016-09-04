@@ -22,16 +22,19 @@ import java.io.FileReader;
 import java.io.BufferedReader;
 
 public class TwilioServlet extends HttpServlet {
-	// TODO: Read these from a credentials file
-	public static final String ACCOUNT_SID = "NULL";
-	public static final String AUTH_TOKEN = "NULL";
-	public static final String TWILIO_NUMBER = "NULL";
+	public String ACCOUNT_SID = "NULL";
+	public String AUTH_TOKEN = "NULL";
+	public String TWILIO_NUMBER = "NULL";
+	// TODO: Read from a specific folder
+	public static final String CREDENTIALS_FILENAME = "/home/ubuntu/credentials";
 
 	public void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		// TODO: Make it so credentials are only read once, upon startup... we don't need to keep
+		// rereading them.
 		// Read in credentials from credentials file
+		initializeCredentials(CREDENTIALS_FILENAME);
 
-
-		sendSMS("16044403468", initializeCredentials("credentials"));
+		sendSMS("16044403468", "Test message");
 
 		/*// Requests come in the form: Request: 320, 341, etc.
 		// TODO: Sometimes texts may come in blank, might want to take care of that.
@@ -84,20 +87,23 @@ public class TwilioServlet extends HttpServlet {
 		}
 	}
 
-	private String initializeCredentials(String fileName) {
-		String credentials = "";
+	private void initializeCredentials(String fileName) {
+		// We know there will only be 3 lines, so just do this sloppy for now
+		// TODO: Make this unsloppy
 		try {
 			BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));
-			String currentLine = bufferedReader.readLine();
-			while (currentLine != null) {
-				credentials += currentLine;
-				currentLine = bufferedReader.readLine();
-			}
+			String firstLine = bufferedReader.readLine();
+			String secondLine = bufferedReader.readLine();
+			String thirdLine = bufferedReader.readLine();
+
+			ACCOUNT_SID = firstLine.split("ACCOUNT_SID = ")[1];
+			AUTH_TOKEN = secondLine.split("AUTH_TOKEN = ")[1];
+			TWILIO_NUMBER = thirdLine.split("TWILIO_NUMBER = ")[1];
+
 			bufferedReader.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return credentials;
 	}
 
 }
