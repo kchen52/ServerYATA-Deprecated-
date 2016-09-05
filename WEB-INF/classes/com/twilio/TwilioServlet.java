@@ -2,7 +2,6 @@ package com.twilio;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -17,14 +16,14 @@ import java.util.List;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
-import java.io.IOException;
-import java.io.FileReader;
-import java.io.BufferedReader;
+import java.io.*;
+import java.net.*;
 
 public class TwilioServlet extends HttpServlet {
 	public String ACCOUNT_SID = "NULL";
 	public String AUTH_TOKEN = "NULL";
 	public String TWILIO_NUMBER = "NULL";
+	public String TRANSLINK_API = "NULL";
 
 	public final String myNumber = "16044403468";
 	// TODO: Read from a specific folder
@@ -49,38 +48,17 @@ public class TwilioServlet extends HttpServlet {
 		}
 
 		for (int i = 0; i < busesRequested.length; i++) {
-			String stuffToReturn = busesRequested[i];
-			sendSMS(myNumber, "this is a long ass string, and i'm hoping to see what will happen if i try to send this all at once. at this point only god knows, but only one way to find out amirite lolol asdfjkasdfjaksdfjkasdlfkasjkdfajksdfjkasdf hasdofuiqweruio afsjkdofjaiosdjfiaosdf keep on trying to break some limit hollllllllyyyyyy shitttttttttajsdfjasdif");
+			String currentBus = busesRequested[i];
+			String busRequestURL = "http://api.translink.ca/rttiapi/v1/buses?apikey=" + 
+				TRANSLINK_API + "&routeNo=" + currentBus;
+			sendSMS(myNumber, getHTML(busRequestURL));
 		}
-
-		// This following line is purely for debug purposes
-		/*TwiMLResponse twiml = new TwiMLResponse();
-		Message message = new Message ("Returning nothing");
-		try {
-		twiml.append(message);
-		} catch (TwiMLException e) {
-		e.printStackTrace();
-		}
-		response.setContentType("application/xml");
-		response.getWriter().print(twiml.toXML());
-		return;
-		} 
-		for (int i = 0; i < busesRequested.length; i++) {
-		String stuffToReturn = busesRequested[i];
-		TwiMLResponse twiml = new TwiMLResponse();
-		Message message = new Message(stuffToReturn);
-		try {
-		twiml.append(message);
-		} catch (TwiMLException e) {
-		e.printStackTrace();
-		}
-		response.setContentType("application/xml");
-		response.getWriter().print(twiml.toXML());
-		}*/
 	}
 
 	private void sendSMS(String recipient, String messageToSend) {
 		// TODO: Handle longer messages
+		// NOTE: There is a 1600 character limit imposed by Twilio, so split messages
+		// accordingly
 		try {
 			TwilioRestClient client = new TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN);
 			Account account = client.getAccount();
@@ -95,6 +73,25 @@ public class TwilioServlet extends HttpServlet {
 		}
 	}
 
+	// Taken from http://stackoverflow.com/questions/1485708/how-do-i-do-a-http-get-in-java
+	private String getHTML(String urlToRead) {
+		StringBuilder result = new StringBuilder();
+		try {
+			URL url = new URL(urlToRead);
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			conn.setRequestMethod("GET");
+			BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			String currentLine;
+			while ((currentLine = reader.readLine()) != null) {
+				result.append(currentLine);
+			}
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return result.toString();
+	}
+
 	private void initializeCredentials(String fileName) {
 		// We know there will only be 3 lines, so just do this sloppy for now
 		// TODO: Make this unsloppy
@@ -103,10 +100,12 @@ public class TwilioServlet extends HttpServlet {
 			String firstLine = bufferedReader.readLine();
 			String secondLine = bufferedReader.readLine();
 			String thirdLine = bufferedReader.readLine();
+			String fourthLine = bufferedReader.readLine();
 
 			ACCOUNT_SID = firstLine.split("ACCOUNT_SID = ")[1];
 			AUTH_TOKEN = secondLine.split("AUTH_TOKEN = ")[1];
 			TWILIO_NUMBER = thirdLine.split("TWILIO_NUMBER = ")[1];
+			TRANSLINK_API = fourthLine.split("TRANSLINK_API = ")[1];
 
 			bufferedReader.close();
 		} catch (IOException e) {
