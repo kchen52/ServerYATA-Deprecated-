@@ -25,6 +25,8 @@ public class TwilioServlet extends HttpServlet {
 	public String TWILIO_NUMBER = "NULL";
 	public String TRANSLINK_API = "NULL";
 
+	private int MAX_OUTGOING_MESSAGE_LENGTH = 1550;
+
 	// TODO: Read from a specific folder
 	public static final String CREDENTIALS_FILENAME = "/home/ubuntu/credentials";
 
@@ -35,7 +37,6 @@ public class TwilioServlet extends HttpServlet {
 		initializeCredentials(CREDENTIALS_FILENAME);
 
 		// Requests come in the form: Request: 320, 341, etc.
-		// TODO: Sometimes texts may come in blank, might want to take care of that.
 		String requestPhoneNumber = request.getParameter("From");
 		String bodyOfRequest = request.getParameter("Body");
 
@@ -43,8 +44,8 @@ public class TwilioServlet extends HttpServlet {
 		// if (bodyOfRequest.....)
 		String busesRequestedSplitByCommas = bodyOfRequest.split("Request: ")[1];
 		String[] busesRequested = busesRequestedSplitByCommas.split(",");
-		// TODO: Work without the assumption that there will always be at least
-		// one bus requested.
+
+		// If no buses are requested...
 		if (busesRequested.length == 0) {
 			// Debug message for now
 			sendSMS(requestPhoneNumber, "At least one bus should be requested lol");
@@ -59,18 +60,31 @@ public class TwilioServlet extends HttpServlet {
 	}
 
 	private void sendSMS(String recipient, String messageToSend) {
-		// TODO: Handle longer messages
 		// NOTE: There is a 1600 character limit imposed by Twilio, so split messages
 		// accordingly
+		ArrayList<String> splitMessages = new ArrayList<String>();
+		int lowerIndex = Math.min(MAX_OUTGOING_MESSAGE_LENGTH, messageToSend.length());
+		while (lowerIndex >= MAX_OUTGOING_MESSAGE_LENGTH) {
+			splitMessages.add(messageToSend.substring(0, MAX_OUTGOING_MESSAGE_LENGTH));
+			messageToSend = messageToSend.substring(MAX_OUTGOING_MESSAGE_LENGTH, messageToSend.length());
+			lowerIndex = Math.min(MAX_OUTGOING_MESSAGE_LENGTH, messageToSend.length());
+		}
+		// However, if the message was less than 1600 characters, we can just send it as is
+		if (splitMessages.size() == 0) {
+			splitMessages.add(messageToSend);
+		}
+
 		try {
 			TwilioRestClient client = new TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN);
 			Account account = client.getAccount();
 			MessageFactory messageFactory = account.getMessageFactory();
-			List<NameValuePair> params = new ArrayList<NameValuePair>();
-			params.add(new BasicNameValuePair("To", recipient));
-			params.add(new BasicNameValuePair("From", TWILIO_NUMBER));
-			params.add(new BasicNameValuePair("Body", messageToSend));
-			Message sms = messageFactory.create(params);
+			for (String subMessage : splitMessages) {
+				List<NameValuePair> params = new ArrayList<NameValuePair>();
+				params.add(new BasicNameValuePair("To", recipient));
+				params.add(new BasicNameValuePair("From", TWILIO_NUMBER));
+				params.add(new BasicNameValuePair("Body", subMessage));
+				Message sms = messageFactory.create(params);
+			}
 		} catch (TwilioRestException e) {
 			e.printStackTrace();
 		}
@@ -91,7 +105,7 @@ public class TwilioServlet extends HttpServlet {
 			reader.close();
 		} catch (IOException e) {
 			// No body, return an appropriate msg
-			return "NO RESULTS";
+			return "NO RESULTS AVAILABLE";
 		}
 		return result.toString();
 	}
