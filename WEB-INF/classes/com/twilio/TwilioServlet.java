@@ -25,7 +25,6 @@ public class TwilioServlet extends HttpServlet {
 	public String TWILIO_NUMBER = "NULL";
 	public String TRANSLINK_API = "NULL";
 
-	public final String myNumber = "16044403468";
 	// TODO: Read from a specific folder
 	public static final String CREDENTIALS_FILENAME = "/home/ubuntu/credentials";
 
@@ -37,21 +36,25 @@ public class TwilioServlet extends HttpServlet {
 
 		// Requests come in the form: Request: 320, 341, etc.
 		// TODO: Sometimes texts may come in blank, might want to take care of that.
+		String requestPhoneNumber = request.getParameter("From");
 		String bodyOfRequest = request.getParameter("Body");
+
+		// TODO: Use regex to check that the body follows the format
+		// if (bodyOfRequest.....)
 		String busesRequestedSplitByCommas = bodyOfRequest.split("Request: ")[1];
 		String[] busesRequested = busesRequestedSplitByCommas.split(",");
 		// TODO: Work without the assumption that there will always be at least
 		// one bus requested.
 		if (busesRequested.length == 0) {
 			// Debug message for now
-			sendSMS(myNumber, "Requests should be in the form \"Request: 341,...\"");
+			sendSMS(requestPhoneNumber, "At least one bus should be requested lol");
 		}
 
 		for (int i = 0; i < busesRequested.length; i++) {
 			String currentBus = busesRequested[i];
 			String busRequestURL = "http://api.translink.ca/rttiapi/v1/buses?apikey=" + 
 				TRANSLINK_API + "&routeNo=" + currentBus;
-			sendSMS(myNumber, getHTML(busRequestURL));
+			sendSMS(requestPhoneNumber, getHTML(busRequestURL));
 		}
 	}
 
@@ -87,7 +90,8 @@ public class TwilioServlet extends HttpServlet {
 			}
 			reader.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			// No body, return an appropriate msg
+			return "NO RESULTS";
 		}
 		return result.toString();
 	}
