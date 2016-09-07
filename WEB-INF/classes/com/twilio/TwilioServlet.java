@@ -22,27 +22,27 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TwilioServlet extends HttpServlet {
-    public String ACCOUNT_SID = "NULL";
-    public String AUTH_TOKEN = "NULL";
-    public String TWILIO_NUMBER = "NULL";
-    public String TRANSLINK_API = "NULL";
+    public static String ACCOUNT_SID = "NULL";
+    public static String AUTH_TOKEN = "NULL";
+    public static String TWILIO_NUMBER = "NULL";
+    public static String TRANSLINK_API = "NULL";
 
     private int MAX_OUTGOING_MESSAGE_LENGTH = 1550;
 
     // TODO: Read from a specific folder
     public static final String CREDENTIALS_FILENAME = "/home/ubuntu/credentials";
 
-    public void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // TODO: Make it so credentials are only read once, upon startup... we don't need to keep
-        // rereading them.
-        // Read in credentials from credentials file
+    static {
         initializeCredentials(CREDENTIALS_FILENAME);
+    }
 
+    public void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Requests come in the form: Request: 320, 341, etc.
         String requestPhoneNumber = request.getParameter("From");
         String bodyOfRequest = request.getParameter("Body");
 
         // TODO: Use regex to check that the body follows the format
+        //Pattern properForm = Pattern.compile("Request: (\\d,)*
         // if (bodyOfRequest.....)
         String busesRequestedSplitByCommas = bodyOfRequest.split("Request: ")[1];
         String[] busesRequested = busesRequestedSplitByCommas.split(",");
@@ -99,6 +99,7 @@ public class TwilioServlet extends HttpServlet {
         }
 
         try {
+            // TODO: Send by bus type (e.g., Langley ctr vs surrey central)
             TwilioRestClient client = new TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN);
             Account account = client.getAccount();
             MessageFactory messageFactory = account.getMessageFactory();
@@ -112,6 +113,9 @@ public class TwilioServlet extends HttpServlet {
         } catch (TwilioRestException e) {
             e.printStackTrace();
         }
+
+        // Because of the way Twilio is configured to interact with this, we need to give it a command
+        //TwiMLResponse twiml = new twiMLResponse()
     }
 
     // Taken from http://stackoverflow.com/questions/1485708/how-do-i-do-a-http-get-in-java
@@ -133,7 +137,7 @@ public class TwilioServlet extends HttpServlet {
         return result.toString();
     }
 
-    private void initializeCredentials(String fileName) {
+    private static void initializeCredentials(String fileName) {
         // We know there will only be 3 lines, so just do this sloppy for now
         // TODO: Make this unsloppy
         try {
