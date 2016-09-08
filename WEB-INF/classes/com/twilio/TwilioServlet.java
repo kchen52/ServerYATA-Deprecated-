@@ -72,19 +72,22 @@ public class TwilioServlet extends HttpServlet {
             // TODO: Send by bus type (e.g., Langley ctr vs surrey central)
             buses = (ArrayList<Bus>)mergeSort(buses);
             StringBuilder builder = new StringBuilder();
+
+            String lastDestination = "NULL";
             for (Bus bus : buses) {
-                builder.append(bus.getDestination());
+                String currentBusDestination = bus.getDestination();
+                if (!currentBusDestination.equals(lastDestination)) {
+                    builder.append(currentBusDestination);
+                    builder.append("-");
+                } 
+                builder.append(bus.getVehicleNumber());
                 builder.append(":");
                 builder.append(bus.getLongitude());
                 builder.append(",");
                 builder.append(bus.getLongitude());
                 builder.append("|");
+                lastDestination = currentBusDestination;
             }
-            /*builder.append("Start: ");
-            for (Bus bus : buses) {
-                builder.append(",");
-                builder.append(bus.getDestination());
-            }*/
 
             //currentBus.init(busRequestURL);
             //sendSMS(requestPhoneNumber, "Initialized " + count + " buses.");
