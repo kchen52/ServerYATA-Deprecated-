@@ -69,7 +69,6 @@ public class TwilioServlet extends HttpServlet {
                 buses.add(bus);
             }
 
-            // TODO: Send by bus type (e.g., Langley ctr vs surrey central)
             buses = (ArrayList<Bus>)mergeSort(buses);
             StringBuilder builder = new StringBuilder();
 
@@ -78,7 +77,7 @@ public class TwilioServlet extends HttpServlet {
                 String currentBusDestination = bus.getDestination();
                 if (!currentBusDestination.equals(lastDestination)) {
                     builder.append(currentBusDestination);
-                    builder.append("-");
+                    builder.append(">");
                 } 
                 builder.append(bus.getVehicleNumber());
                 builder.append(":");
@@ -89,8 +88,6 @@ public class TwilioServlet extends HttpServlet {
                 lastDestination = currentBusDestination;
             }
 
-            //currentBus.init(busRequestURL);
-            //sendSMS(requestPhoneNumber, "Initialized " + count + " buses.");
             sendSMS(requestPhoneNumber, builder.toString());
             response.setContentType("application/xml");
             response.getWriter().print("<Nothing></Nothing>");
