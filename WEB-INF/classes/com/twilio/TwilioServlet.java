@@ -68,18 +68,29 @@ public class TwilioServlet extends HttpServlet {
                 bus.init(matcher.group());
                 buses.add(bus);
             }
+
+            // TODO: Send by bus type (e.g., Langley ctr vs surrey central)
+            buses = (ArrayList<Bus>)mergeSort(buses);
             StringBuilder builder = new StringBuilder();
             for (Bus bus : buses) {
-                builder.append(bus.getVehicleNumber());
+                builder.append(bus.getDestination());
                 builder.append(":");
                 builder.append(bus.getLongitude());
                 builder.append(",");
                 builder.append(bus.getLongitude());
                 builder.append("|");
             }
+            /*builder.append("Start: ");
+            for (Bus bus : buses) {
+                builder.append(",");
+                builder.append(bus.getDestination());
+            }*/
+
             //currentBus.init(busRequestURL);
             //sendSMS(requestPhoneNumber, "Initialized " + count + " buses.");
             sendSMS(requestPhoneNumber, builder.toString());
+            response.setContentType("application/xml");
+            response.getWriter().print("<Nothing></Nothing>");
         }
     }
 
@@ -99,7 +110,6 @@ public class TwilioServlet extends HttpServlet {
         }
 
         try {
-            // TODO: Send by bus type (e.g., Langley ctr vs surrey central)
             TwilioRestClient client = new TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN);
             Account account = client.getAccount();
             MessageFactory messageFactory = account.getMessageFactory();
@@ -157,5 +167,49 @@ public class TwilioServlet extends HttpServlet {
             e.printStackTrace();
         }
     }
+
+    // Run of the mill mergesort. In our case, we're sorting by bus destination
+    private List<Bus> mergeSort(List<Bus> arrayToSort) {
+        if (arrayToSort.size() <= 1) {
+            return arrayToSort;
+        }
+        // Note that startIndex is inclusive
+        // while endIndex is exclusive. That's why the following looks like it would have duplicate
+        // values, but actually sorts properly
+        List<Bus> firstHalf = mergeSort(arrayToSort.subList(0, arrayToSort.size()/2));
+        List<Bus> secondHalf = mergeSort(arrayToSort.subList(arrayToSort.size()/2, arrayToSort.size()));
+        List<Bus> mergedResult = merge(firstHalf, secondHalf);
+        return mergedResult;
+    }
+
+    private List<Bus> merge(List<Bus> firstHalf, List<Bus> secondHalf) {
+        List<Bus> merge = new ArrayList<Bus>();
+        int firstHalfIndex = 0;
+        int secondHalfIndex = 0;
+        while (firstHalfIndex < firstHalf.size() && secondHalfIndex < secondHalf.size()) {
+            String firstHalfValue = firstHalf.get(firstHalfIndex).getDestination();
+            String secondHalfValue = secondHalf.get(secondHalfIndex).getDestination();
+
+            if (firstHalfValue.compareTo(secondHalfValue) <= 0) {
+                merge.add(firstHalf.get(firstHalfIndex));
+                firstHalfIndex++;
+            } else if (firstHalfValue.compareTo(secondHalfValue) > 0) {
+                merge.add(secondHalf.get(secondHalfIndex));
+                secondHalfIndex++;
+            }
+        }
+
+        while (firstHalfIndex < firstHalf.size()) {
+            merge.add(firstHalf.get(firstHalfIndex));
+            firstHalfIndex++;
+        }
+
+        while (secondHalfIndex < secondHalf.size()) {
+            merge.add(secondHalf.get(secondHalfIndex));
+            secondHalfIndex++;
+        }
+        return merge;
+    }
+
 
 }
