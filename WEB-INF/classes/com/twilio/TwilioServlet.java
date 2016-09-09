@@ -81,7 +81,7 @@ public class TwilioServlet extends HttpServlet {
                 } 
                 builder.append(bus.getVehicleNumber());
                 builder.append(":");
-                builder.append(bus.getLongitude());
+                builder.append(bus.getLatitude());
                 builder.append(",");
                 builder.append(bus.getLongitude());
                 builder.append("|");
