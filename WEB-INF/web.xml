@@ -4,14 +4,14 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
 	version="2.4">
 
-	<display-name>Twilio SMS App</display-name>
+	<display-name>Yet Another Translink App Server-Side</display-name>
 	<servlet>
-		<servlet-name>TwilioServlet</servlet-name>
-		<servlet-class>com.twilio.TwilioServlet</servlet-class>
+		<servlet-name>YATAServlet</servlet-name>
+		<servlet-class>com.kchen52.YATAServlet</servlet-class>
 	</servlet>
 
 	<servlet-mapping>
-		<servlet-name>TwilioServlet</servlet-name>
+		<servlet-name>YATAServlet</servlet-name>
 		<url-pattern>/sms</url-pattern>
 	</servlet-mapping>
 

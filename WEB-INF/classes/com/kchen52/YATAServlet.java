@@ -1,9 +1,7 @@
-package com.twilio;
+package com.kchen52;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Map;
-import java.util.HashMap;
 
 import com.twilio.sdk.resource.instance.Account;
 import com.twilio.sdk.TwilioRestClient;
@@ -23,7 +21,7 @@ import java.net.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TwilioServlet extends HttpServlet {
+public class YATAServlet extends HttpServlet {
     public static String ACCOUNT_SID = "NULL";
     public static String AUTH_TOKEN = "NULL";
     public static String TWILIO_NUMBER = "NULL";
@@ -49,11 +47,8 @@ public class TwilioServlet extends HttpServlet {
         String busesRequestedSplitByCommas = bodyOfRequest.split("Request: ")[1];
         String[] busesRequested = busesRequestedSplitByCommas.split(",");
 
-        // If no buses are requested...
-        if (busesRequested.length == 0) {
-            // Debug message for now
-            sendSMS(requestPhoneNumber, "At least one bus should be requested lol");
-        }
+        // If no buses are requested, simply stop
+        if (busesRequested.length == 0) { return; }
 
         for (int i = 0; i < busesRequested.length; i++) {
             String currentBus = busesRequested[i];
@@ -62,7 +57,7 @@ public class TwilioServlet extends HttpServlet {
             String busInformation = getHTML(busRequestURL);
 
             ArrayList<Bus> buses = new ArrayList<Bus>();
-            // Separate buses 
+            // Separate buses using regex
             Pattern busPattern = Pattern.compile("<Bus>(.*?)</Bus>");
             Matcher matcher = busPattern.matcher(busInformation);
             while (matcher.find()) {
@@ -72,25 +67,8 @@ public class TwilioServlet extends HttpServlet {
             }
 
             buses = (ArrayList<Bus>)mergeSort(buses);
-            StringBuilder builder = new StringBuilder();
-
-            String lastDestination = "NULL";
-            for (Bus bus : buses) {
-                String currentBusDestination = bus.getDestination();
-                if (!currentBusDestination.equals(lastDestination)) {
-                    builder.append(currentBusDestination);
-                    builder.append(">");
-                } 
-                builder.append(bus.getVehicleNumber());
-                builder.append(":");
-                builder.append(bus.getLatitude());
-                builder.append(",");
-                builder.append(bus.getLongitude());
-                builder.append("|");
-                lastDestination = currentBusDestination;
-            }
-
-            sendSMS(requestPhoneNumber, builder.toString());
+            String formattedInformation = prepareBusInformationForSending(buses);
+            sendSMS(requestPhoneNumber, formattedInformation);
 
             // Empty TWiML response for twilio
             TwiMLResponse twiml = new TwiMLResponse();
@@ -99,6 +77,27 @@ public class TwilioServlet extends HttpServlet {
         }
     }
 
+    public String prepareBusInformationForSending(ArrayList<Bus> buses) {
+
+        StringBuilder builder = new StringBuilder();
+
+        String lastDestination = "NULL";
+        for (Bus bus : buses) {
+            String currentBusDestination = bus.getDestination();
+            if (!currentBusDestination.equals(lastDestination)) {
+                builder.append(currentBusDestination);
+                builder.append(">");
+            } 
+            builder.append(bus.getVehicleNumber());
+            builder.append(":");
+            builder.append(bus.getLatitude());
+            builder.append(",");
+            builder.append(bus.getLongitude());
+            builder.append("|");
+            lastDestination = currentBusDestination;
+        }
+        return builder.toString();
+    }
     private void sendSMS(String recipient, String messageToSend) {
         // NOTE: There is a 1600 character limit imposed by Twilio, so split messages
         // accordingly
@@ -128,9 +127,6 @@ public class TwilioServlet extends HttpServlet {
         } catch (TwilioRestException e) {
             e.printStackTrace();
         }
-
-        // Because of the way Twilio is configured to interact with this, we need to give it a command
-        //TwiMLResponse twiml = new twiMLResponse()
     }
 
     // Taken from http://stackoverflow.com/questions/1485708/how-do-i-do-a-http-get-in-java
