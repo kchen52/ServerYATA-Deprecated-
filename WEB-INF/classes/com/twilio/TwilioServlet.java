@@ -16,6 +16,8 @@ import java.util.List;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
+import com.twilio.sdk.verbs.TwiMLResponse;
+
 import java.io.*;
 import java.net.*;
 import java.util.regex.Matcher;
@@ -89,8 +91,11 @@ public class TwilioServlet extends HttpServlet {
             }
 
             sendSMS(requestPhoneNumber, builder.toString());
+
+            // Empty TWiML response for twilio
+            TwiMLResponse twiml = new TwiMLResponse();
             response.setContentType("application/xml");
-            response.getWriter().print("<Nothing></Nothing>");
+            response.getWriter().print(twiml.toXML());
         }
     }
 
