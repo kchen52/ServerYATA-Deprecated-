@@ -50,13 +50,13 @@ public class YATAServlet extends HttpServlet {
         // If no buses are requested, simply stop
         if (busesRequested.length == 0) { return; }
 
+        ArrayList<Bus> buses = new ArrayList<Bus>();
         for (int i = 0; i < busesRequested.length; i++) {
             String currentBus = busesRequested[i];
             String busRequestURL = "http://api.translink.ca/rttiapi/v1/buses?apikey=" + 
                 TRANSLINK_API + "&routeNo=" + currentBus;
             String busInformation = getHTML(busRequestURL);
 
-            ArrayList<Bus> buses = new ArrayList<Bus>();
             // Separate buses using regex
             Pattern busPattern = Pattern.compile("<Bus>(.*?)</Bus>");
             Matcher matcher = busPattern.matcher(busInformation);
@@ -65,11 +65,15 @@ public class YATAServlet extends HttpServlet {
                 bus.init(matcher.group());
                 buses.add(bus);
             }
-
-            buses = (ArrayList<Bus>)mergeSort(buses);
-            String formattedInformation = prepareBusInformationForSending(buses);
-            sendSMS(requestPhoneNumber, formattedInformation);
         }
+
+        // Sorts the buses by destination name so less information needs to be sent.
+        buses = (ArrayList<Bus>)mergeSort(buses);
+        // Possibly consider sending fewer units of precision for long/lat if we're frequently
+        // going over the 1600 character limit
+        String formattedInformation = prepareBusInformationForSending(buses);
+        sendSMS(requestPhoneNumber, formattedInformation);
+
         // Empty TWiML response for twilio
         TwiMLResponse twiml = new TwiMLResponse();
         response.setContentType("application/xml");
