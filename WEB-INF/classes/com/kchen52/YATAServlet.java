@@ -45,7 +45,7 @@ public class YATAServlet extends HttpServlet {
         //Pattern properForm = Pattern.compile("Request: (\\d,)*
         // if (bodyOfRequest.....)
         String busesRequestedSplitByCommas = bodyOfRequest.split("Request: ")[1];
-        String[] busesRequested = busesRequestedSplitByCommas.split(",");
+        String[] busesRequested = busesRequestedSplitByCommas.split(", ");
 
         // If no buses are requested, simply stop
         if (busesRequested.length == 0) { return; }
@@ -69,12 +69,11 @@ public class YATAServlet extends HttpServlet {
             buses = (ArrayList<Bus>)mergeSort(buses);
             String formattedInformation = prepareBusInformationForSending(buses);
             sendSMS(requestPhoneNumber, formattedInformation);
-
-            // Empty TWiML response for twilio
-            TwiMLResponse twiml = new TwiMLResponse();
-            response.setContentType("application/xml");
-            response.getWriter().print(twiml.toXML());
         }
+        // Empty TWiML response for twilio
+        TwiMLResponse twiml = new TwiMLResponse();
+        response.setContentType("application/xml");
+        response.getWriter().print(twiml.toXML());
     }
 
     public String prepareBusInformationForSending(ArrayList<Bus> buses) {
