@@ -1,4 +1,4 @@
 # ServerYATA
-Server side of YATA app
 
-Undergoing a rewrite. Will be updated ASAP.
+No longer in use. See https://github.com/kchen52/ServerYATA for updated version.
+Server side of YATA app
